@@ -7,6 +7,7 @@ if(isset($_POST['des'])){
     
     if(empty($des)){
         header("Location: index.php?mess=error");
+
     }else{
         $stmt = $pdo->prepare("INSERT INTO tasks(des) VALUES(?)");
         $response = $stmt->execute([$des]);
@@ -15,8 +16,8 @@ if(isset($_POST['des'])){
         }
         else{
            header("Location: index.php?mess=error");
+        //    header("Location: index.php");
         }
-        header("Location: index.php");
         $pdo = null;
         exit();
     }

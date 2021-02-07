@@ -1,13 +1,10 @@
-$(document).ready(alert('hello'));
-
 <?php
-
+require 'db_conn.php';
+// return $_POST['id'];
 if(isset($_POST['id'])){
-    require 'db_conn.php';
-    
     $id = $_POST['id'];
     $des = $_POST['des']; # this description is comming from user input
-    
+    echo '<script>alert($id.$des)</script>'; 
     if(empty($id)){
         echo 'error';
     }else{
@@ -21,7 +18,8 @@ if(isset($_POST['id'])){
             $pdo = null;
             exit();
         }
-        $response = $pdo->query("UPDATE tasks SET des=$des WHERE id=$_id");
+        $stmt = $pdo->prepare("UPDATE tasks SET des=? WHERE id=?");
+        $response = $stmt->execute([$des, $id]);
         if($response){
             echo "Updated";
         }else{

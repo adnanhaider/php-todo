@@ -17,22 +17,20 @@
   <body>
     <div class="mt-5 m-auto card" style="width: 80%;">
       <div class="card-body">
+      <form action="add.php" method="POST" autocomplete="off" id="add_form">
         <h3>TODO LIST</h3>
         <div class="add-section">
-          <form action="add.php" method="POST" autocomplete="off" id="add_form">
             <?php if(isset($_GET['mess']) && $_GET['mess'] == 'error'){?>
               <div class="m-auto row" style="width: 80%;">
                 <input type="text" class="form-control" name='empty_des' style="border-color: #ff9999;" placeholder='Please fill in a task'/>
-                <button type="submit" id="fill_Add">Add</button>
+                <input type="submit" value="Add" id="empty_Add"/>
               </div>
             <?php } else{?>
               <div class="m-auto row" style="width: 80%;">
                 <input type="text" class="form-control" name='des' id="des_input_id" placeholder='Enter a task to do'/>
-                <button type="submit" id="fill_Add">
-                  Add</button>
+                <button type="submit" id="fill_Add">Add</button>
                 </div>
             <?php }?>
-          </form>
         </div>
         <?php $tasks = $pdo->query("SELECT * FROM tasks ORDER BY id DESC");?>
           <div class="show-todo-section">
@@ -59,15 +57,21 @@
                       
                 <?php } ?>
                     <div class="d-flex flex-row">
+                    <!-- <form action="edit.php" method="POST" > -->
                       <small>created: <?php echo $task['date_time']?></small>
-                      <span id="<?php echo $task['id']?>" 
-                        value="<?php echo $task['des']?>" class="edit_task">
-                        <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-                      </span>
+                      <input edit_id="<?php echo $task['id'];?>" 
+                        edit_text="<?php echo $task['des'];?>" value="edit" type="button" class="btn btn-primary edit_task"/>
+                        <input update_id="<?php echo $task['id'];?>" 
+                        update_text="<?php echo $task['des'];?>"
+                        formaction="edit.php" value="update" type="button" name="update_name" class="btn btn-warning update_task"/>
+                        <!-- <i class="fa fa-pencil-square-o" aria-hidden="true"></i> -->
+                    <!-- </form> -->
+
                     </div>
               </div>
             <?php }?>
         </div>
+      </form>
       </div>
   </div>
     
@@ -77,6 +81,22 @@
     <script src="js/jquery-min.js"></script>
     <script>
       $(document).ready(function(){
+        var edit_clicked = false;
+        var input_field_changed = false;
+        
+        $("#des_input_id").on("change paste keyup", function() {
+          input_field_changed = true;
+          });
+          $(document).mousemove(function(event){
+            if(edit_clicked && input_field_changed){
+              $('#update_id').prop('disabled', 'false');
+        }
+          }); 
+
+        setTimeout(function() {
+          if(window.location.href=="http://localhost/todo/index.php?mess=error")
+            window.location.href = "http://localhost/todo/index.php";
+          }, 1000);
          $('.remove-to-do').click(function(e){
            const id = $(this).attr('id');
             $.post("remove.php",
@@ -88,8 +108,8 @@
          });
 
          $('.check-box').click(function(e){
-          const id = $(this).attr('id');
-          $.post('check.php', {id: id},(data)=>{
+          const _id = $(this).attr('id');
+          $.post('check.php', {id: _id},(data)=>{
             if(data != 'error'){
               const h2 = $(this).next();
               if(data === '1'){
@@ -100,41 +120,35 @@
             } 
           });
          });
-         $("#fill_Add").click(function () {
-              $(this).text(function(i, text){
-                  return text === "Update" ? "Add" : "Add";
-              })
-          });
 
-         $("#fill_Add").click(function(){
-            // $('#add_form').attr('action', 'add.php')
-            const button_text = $('#fill_Add').text();
-            if(button_text ==="Add"){
-              $('#add_form').attr('action', 'add.php');
-            }
-            else if(button_text ==="Update"){
-              $('#add_form').attr('action', 'edit.php');
-              // $("#fill_Add").html("Add");
-            }
-          }); 
-         $('.edit_task').click(function(e){
-            const id = $(this).attr('id');
-            const des = $(this).attr('value');
-            $('input[name$="des"]').focus();
-            // $('input[name$="des"]').val($('input[name$="des"]').val() + des);
-            document.getElementById('des_input_id').value = des;
-            $(this).parent().parent().hide(400)
-            $("#fill_Add").html("Update");
-          // });
-          //   $.post("edit.php",
-          // {
-          //   id : id, 
-          //   des: des
-          // },(data) =>{
-          //   // $(this).removeAttr("style");
+        $('.update_task').on('click',function(e){
+          e.preventDefault();
+            $.ajax({
+                type: "POST",
+                url: "edit.php",
+                data: { 
+                    id: $(this).attr('update_id'), // < note use of 'this' here
+                    des: document.getElementById('des_input_id').value 
+                },
+                success: function(result) {
+                    // alert(result);
+                    window.location.href = "http://localhost/todo/index.php";
+                },
+                error: function(result) {
+                    alert('error');
+                }
+            });
+        });
+
+        $('.edit_task').on('click', function(){
+          edit_clicked = true
+          // var id = $(this).attr('edit_id');
+          var des = $(this).attr('edit_text');
+          $('input[name$="des"]').focus();
+          document.getElementById('des_input_id').value = des;
+          var new_des = document.getElementById('des_input_id').value
+        });       
           });
-       
-      });
     </script>
   </body>
 </html>
